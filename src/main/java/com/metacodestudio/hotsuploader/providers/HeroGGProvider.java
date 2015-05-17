@@ -29,13 +29,13 @@ public class HeroGGProvider extends Provider {
 
     @Override
     public Status upload(final ReplayFile replayFile) {
-        String boundary = String.format("----------%s", UUID.randomUUID().toString().replaceAll("-", ""));
-        String contentType = "multipart/form-data; boundary=" + boundary;
+        final String boundary = String.format("----------%s", UUID.randomUUID().toString().replaceAll("-", ""));
+        final String contentType = "multipart/form-data; boundary=" + boundary;
 
         try {
-            URL url = new URL(URI);
+            final URL url = new URL(URI);
 
-            Boolean status = sendRequest(replayFile, boundary, contentType, url);
+            final Boolean status = sendRequest(replayFile, boundary, contentType, url);
 
             if (status != null && status) {
                 return Status.UPLOADED;
@@ -55,7 +55,7 @@ public class HeroGGProvider extends Provider {
     private Boolean sendRequest(final ReplayFile replayFile, final String boundary, final String contentType, final URL url) throws IOException {
         HttpURLConnection connection = null;
         try {
-            byte[] fileData = getFileData(replayFile, boundary);
+            final byte[] fileData = getFileData(replayFile, boundary);
             connection = (HttpURLConnection) url.openConnection();
             connection.setDoOutput(true);
             connection.setRequestMethod("POST");
@@ -68,10 +68,10 @@ public class HeroGGProvider extends Provider {
                 requestStream.write(fileData, 0, fileData.length);
             }
 
-            byte[] b;
+            final byte[] b;
             try (InputStream responseStream = connection.getInputStream()) {
                 b = new byte[responseStream.available()];
-                int read = responseStream.read(b);
+                final int read = responseStream.read(b);
 
                 // If no response received from provider, assume they're having technical issues
                 if (read <= 0) {

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.metacodestudio.hotsuploader.models.ReplayFile;
 import com.metacodestudio.hotsuploader.models.Status;
 import org.apache.commons.codec.binary.Base64;
+
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -32,7 +33,7 @@ public class HeroGGProvider extends Provider {
         String boundary = String.format("----------%s", UUID.randomUUID().toString().replaceAll("-", ""));
         String contentType = "multipart/form-data; boundary=" + boundary;
         byte[] fileData = getFileData(replayFile, boundary);
-        if(fileData == null) {
+        if (fileData == null) {
             return Status.EXCEPTION;
         }
 
@@ -64,10 +65,10 @@ public class HeroGGProvider extends Provider {
 
             String result = new String(b, Charset.forName(ENCODING));
             ObjectMapper mapper = new ObjectMapper();
-            Map<String,Object> resultMap = mapper.readValue(result, Map.class);
+            Map<String, Object> resultMap = mapper.readValue(result, Map.class);
             Object status = resultMap.get("success");
 
-            if (status != null && (Boolean)status) {
+            if (status != null && (Boolean) status) {
                 return Status.UPLOADED;
             } else {
                 return Status.EXCEPTION;
@@ -86,7 +87,6 @@ public class HeroGGProvider extends Provider {
     }
 
     private byte[] getFileData(final ReplayFile replayFile, String boundary) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
         String key = getContentString(boundary, "key", "Nothing goes here at the moment");
         String name = getContentString(boundary, "name", replayFile.getFile().getName());
@@ -94,7 +94,7 @@ public class HeroGGProvider extends Provider {
         String closing = "\r\n--" + boundary + "--\r\n";
         String newLine = "\r\n";
 
-        try {
+        try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
             byte[] fileContents = Files.readAllBytes(replayFile.getFile().toPath());
 
             stream.write(key.getBytes(ENCODING));

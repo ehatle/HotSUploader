@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.metacodestudio.hotsuploader.models.ReplayFile;
 import com.metacodestudio.hotsuploader.models.Status;
+import com.metacodestudio.hotsuploader.utils.IOUtils;
 import org.apache.commons.codec.binary.Base64;
 
 import java.io.*;
@@ -62,18 +63,9 @@ public class HeroGGProvider extends Provider {
                 requestStream.write(fileData, 0, fileData.length);
             }
 
-            final byte[] b;
-            try (InputStream responseStream = connection.getInputStream()) {
-                b = new byte[responseStream.available()];
-                final int read = responseStream.read(b);
+            final String result = IOUtils.readInputStream(connection.getInputStream());
 
-                // If no response received from provider, assume they're having technical issues
-                if (read <= 0) {
-                    throw new IOException("Provider provided invalid response");
-                }
-            }
-
-            Map<String, Object> resultMap = mapper.readValue(b, Map.class);
+            Map<String, Object> resultMap = mapper.readValue(result, Map.class);
             return (Boolean) resultMap.get("success");
         } finally {
             if(connection != null) {

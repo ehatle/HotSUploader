@@ -56,13 +56,7 @@ public class HeroGGProvider extends Provider {
         HttpURLConnection connection = null;
         try {
             final byte[] fileData = getFileData(replayFile, boundary);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setDoOutput(true);
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", contentType);
-            connection.setRequestProperty("User-Agent", "HeroGG");
-            connection.setFixedLengthStreamingMode((long) fileData.length);
-            connection.setRequestProperty("Authorization", "Basic " + new String(Base64.encodeBase64(ACCESS_KEY_ID.getBytes(ENCODING))));
+            connection = setupHttpURLConnection(contentType, url, fileData);
 
             try (OutputStream requestStream = connection.getOutputStream()) {
                 requestStream.write(fileData, 0, fileData.length);
@@ -86,6 +80,18 @@ public class HeroGGProvider extends Provider {
                 connection.disconnect();
             }
         }
+    }
+
+    private HttpURLConnection setupHttpURLConnection(final String contentType, final URL url, final byte[] fileData) throws IOException {
+        final HttpURLConnection connection;
+        connection = (HttpURLConnection) url.openConnection();
+        connection.setDoOutput(true);
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Content-Type", contentType);
+        connection.setRequestProperty("User-Agent", "HeroGG");
+        connection.setFixedLengthStreamingMode((long) fileData.length);
+        connection.setRequestProperty("Authorization", "Basic " + new String(Base64.encodeBase64(ACCESS_KEY_ID.getBytes(ENCODING))));
+        return connection;
     }
 
     private byte[] getFileData(final ReplayFile replayFile, String boundary) throws IOException {

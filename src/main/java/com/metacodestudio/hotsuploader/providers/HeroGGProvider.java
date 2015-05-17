@@ -26,6 +26,7 @@ public class HeroGGProvider extends Provider {
         super("Hero.GG");
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Status upload(final ReplayFile replayFile) {
         HttpURLConnection connection = null;
@@ -98,7 +99,7 @@ public class HeroGGProvider extends Provider {
             stream.write(file.getBytes(ENCODING));
             stream.write(fileContents);
             stream.write(closing.getBytes(ENCODING));
-            
+
             return stream.toByteArray();
         }
     }

@@ -55,7 +55,12 @@ public class HeroGGProvider extends Provider {
             byte[] b;
             try (InputStream responseStream = connection.getInputStream()) {
                 b = new byte[responseStream.available()];
-                responseStream.read(b);
+                int read = responseStream.read(b);
+
+                // If no response received from provider, assume they're having technical issues
+                if(read <= 0) {
+                    throw new IOException("Provider provided invalid response");
+                }
             }
 
             String result = new String(b, Charset.forName(ENCODING));

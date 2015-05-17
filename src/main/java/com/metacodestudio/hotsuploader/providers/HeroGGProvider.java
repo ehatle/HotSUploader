@@ -48,9 +48,9 @@ public class HeroGGProvider extends Provider {
             connection.setFixedLengthStreamingMode((long) fileData.length);
             connection.setRequestProperty("Authorization", "Basic " + new String(Base64.encodeBase64(ACCESS_KEY_ID.getBytes(ENCODING))));
 
-            OutputStream requestStream = connection.getOutputStream();
-            requestStream.write(fileData, 0, fileData.length);
-            requestStream.close();
+            try(OutputStream requestStream = connection.getOutputStream()) {
+                requestStream.write(fileData, 0, fileData.length);
+            }
 
             byte[] b;
             try (InputStream responseStream = connection.getInputStream()) {

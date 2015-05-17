@@ -12,7 +12,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.Map;
 import java.util.UUID;
@@ -21,6 +20,7 @@ public class HeroGGProvider extends Provider {
 
     private static final String ACCESS_KEY_ID = "beta:anQA9aBp";
     private static final String ENCODING = "UTF-8";
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     public HeroGGProvider() {
         super("Hero.GG");
@@ -63,9 +63,8 @@ public class HeroGGProvider extends Provider {
                 }
             }
 
-            String result = new String(b, Charset.forName(ENCODING));
-            ObjectMapper mapper = new ObjectMapper();
-            Map<String, Object> resultMap = mapper.readValue(result, Map.class);
+
+            Map<String, Object> resultMap = mapper.readValue(b, Map.class);
             Object status = resultMap.get("success");
 
             if (status != null && (Boolean) status) {

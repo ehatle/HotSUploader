@@ -28,23 +28,17 @@ public class HeroGGProvider extends Provider {
 
     @Override
     public Status upload(final ReplayFile replayFile) {
+        HttpURLConnection connection = null;
         String uri = "http://upload.hero.gg/ajax/upload-replay";
 
         String boundary = String.format("----------%s", UUID.randomUUID().toString().replaceAll("-", ""));
         String contentType = "multipart/form-data; boundary=" + boundary;
-        byte[] fileData = getFileData(replayFile, boundary);
-        if (fileData == null) {
-            return Status.EXCEPTION;
-        }
 
-        URL url;
         try {
-            url = new URL(uri);
-        } catch (MalformedURLException e) {
-            return Status.EXCEPTION;
-        }
-        HttpURLConnection connection = null;
-        try {
+            byte[] fileData = getFileData(replayFile, boundary);
+
+            URL url = new URL(uri);
+
             connection = (HttpURLConnection) url.openConnection();
             connection.setDoOutput(true);
             connection.setRequestMethod("POST");
@@ -86,7 +80,7 @@ public class HeroGGProvider extends Provider {
 
     }
 
-    private byte[] getFileData(final ReplayFile replayFile, String boundary) {
+    private byte[] getFileData(final ReplayFile replayFile, String boundary) throws IOException {
 
         String key = getContentString(boundary, "key", "Nothing goes here at the moment");
         String name = getContentString(boundary, "name", replayFile.getFile().getName());
@@ -104,12 +98,9 @@ public class HeroGGProvider extends Provider {
             stream.write(file.getBytes(ENCODING));
             stream.write(fileContents);
             stream.write(closing.getBytes(ENCODING));
+            
             return stream.toByteArray();
-
-        } catch (IOException e) {
-            return null;
         }
-
     }
 
     private String getContentString(String boundary, String key, String value) {

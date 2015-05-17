@@ -21,53 +21,23 @@ public class HeroGGProvider extends Provider {
     private static final String ACCESS_KEY_ID = "beta:anQA9aBp";
     private static final String ENCODING = "UTF-8";
     private static final ObjectMapper mapper = new ObjectMapper();
+    public static final String URI = "http://upload.hero.gg/ajax/upload-replay";
 
     public HeroGGProvider() {
         super("Hero.GG");
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Status upload(final ReplayFile replayFile) {
-        HttpURLConnection connection = null;
-        String uri = "http://upload.hero.gg/ajax/upload-replay";
-
         String boundary = String.format("----------%s", UUID.randomUUID().toString().replaceAll("-", ""));
         String contentType = "multipart/form-data; boundary=" + boundary;
 
         try {
-            byte[] fileData = getFileData(replayFile, boundary);
+            URL url = new URL(URI);
 
-            URL url = new URL(uri);
+            Boolean status = sendRequest(replayFile, boundary, contentType, url);
 
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setDoOutput(true);
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", contentType);
-            connection.setRequestProperty("User-Agent", "HeroGG");
-            connection.setFixedLengthStreamingMode((long) fileData.length);
-            connection.setRequestProperty("Authorization", "Basic " + new String(Base64.encodeBase64(ACCESS_KEY_ID.getBytes(ENCODING))));
-
-            try(OutputStream requestStream = connection.getOutputStream()) {
-                requestStream.write(fileData, 0, fileData.length);
-            }
-
-            byte[] b;
-            try (InputStream responseStream = connection.getInputStream()) {
-                b = new byte[responseStream.available()];
-                int read = responseStream.read(b);
-
-                // If no response received from provider, assume they're having technical issues
-                if(read <= 0) {
-                    throw new IOException("Provider provided invalid response");
-                }
-            }
-
-
-            Map<String, Object> resultMap = mapper.readValue(b, Map.class);
-            Object status = resultMap.get("success");
-
-            if (status != null && (Boolean) status) {
+            if (status != null && status) {
                 return Status.UPLOADED;
             } else {
                 return Status.EXCEPTION;
@@ -77,12 +47,45 @@ public class HeroGGProvider extends Provider {
             return Status.EXCEPTION;
         } catch (IOException e) {
             return Status.NEW;
+        }
+
+    }
+
+    @SuppressWarnings("unchecked")
+    private Boolean sendRequest(final ReplayFile replayFile, final String boundary, final String contentType, final URL url) throws IOException {
+        HttpURLConnection connection = null;
+        try {
+            byte[] fileData = getFileData(replayFile, boundary);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setDoOutput(true);
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", contentType);
+            connection.setRequestProperty("User-Agent", "HeroGG");
+            connection.setFixedLengthStreamingMode((long) fileData.length);
+            connection.setRequestProperty("Authorization", "Basic " + new String(Base64.encodeBase64(ACCESS_KEY_ID.getBytes(ENCODING))));
+
+            try (OutputStream requestStream = connection.getOutputStream()) {
+                requestStream.write(fileData, 0, fileData.length);
+            }
+
+            byte[] b;
+            try (InputStream responseStream = connection.getInputStream()) {
+                b = new byte[responseStream.available()];
+                int read = responseStream.read(b);
+
+                // If no response received from provider, assume they're having technical issues
+                if (read <= 0) {
+                    throw new IOException("Provider provided invalid response");
+                }
+            }
+
+            Map<String, Object> resultMap = mapper.readValue(b, Map.class);
+            return (Boolean) resultMap.get("success");
         } finally {
-            if (connection != null) {
+            if(connection != null) {
                 connection.disconnect();
             }
         }
-
     }
 
     private byte[] getFileData(final ReplayFile replayFile, String boundary) throws IOException {
